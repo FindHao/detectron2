@@ -291,6 +291,12 @@ class PolygonMasks:
                 t = t.cpu().numpy()
             return np.asarray(t).astype("float64")
 
+        def _make_array_np(t:np.ndarray) -> np.ndarray:
+            if t.dtype.type != np.float64: 
+                return t.astype("float64")
+            else:
+                return t
+
         def process_polygons(
             polygons_per_instance: List[Union[torch.Tensor, np.ndarray]]
         ) -> List[np.ndarray]:
@@ -300,7 +306,14 @@ class PolygonMasks:
                     "Got '{}' instead.".format(type(polygons_per_instance))
                 )
             # transform each polygon to a numpy array
-            polygons_per_instance = [_make_array(p) for p in polygons_per_instance]
+            if len(polygons_per_instance) != 0:
+                if isinstance(polygons_per_instance[0], np.ndarray):
+                    polygons_per_instance = [_make_array_np(p) for p in polygons_per_instance]    
+                else:
+                    polygons_per_instance = [_make_array(p) for p in polygons_per_instance]
+            else:
+                polygons_per_instance = [_make_array(p) for p in polygons_per_instance]
+            # polygons_per_instance = [_make_array(p) for p in polygons_per_instance]
             for polygon in polygons_per_instance:
                 if len(polygon) % 2 != 0 or len(polygon) < 6:
                     raise ValueError(f"Cannot create a polygon from {len(polygon)} coordinates.")
